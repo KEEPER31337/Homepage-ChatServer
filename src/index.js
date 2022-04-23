@@ -1,8 +1,8 @@
-const http = require('http');
-const SocketIO = require('socket.io');
-const dayjs = require('dayjs');
+import http from 'http';
+import { Server } from 'socket.io';
+import dayjs from 'dayjs';
 // local
-const authAPI = require('./API/auth');
+import authAPI from './API/auth';
 
 const PORT = 3002;
 const timeFormat = 'YYYY-MM-DD hh:mm:ss';
@@ -15,7 +15,7 @@ const event = {
 };
 
 const httpServer = http.createServer();
-const wsServer = SocketIO(httpServer, {
+const wsServer = new Server(httpServer, {
   cors: {
     origin: '*',
     credentials: true,
@@ -27,7 +27,10 @@ wsServer.on(event.connection, (socket) => {
     authAPI.getAuth({ token }).then((data) => {
       if (data.success) {
         socket.join(roomName);
-        const peopleCount = wsServer.sockets.adapter.rooms.get(roomName)?.size;
+        let peopleCount = 0;
+        if (wsServer.sockets.adapter.rooms.get(roomName)) {
+          peopleCount = wsServer.sockets.adapter.rooms.get(roomName).size;
+        }
         socket.to(roomName).emit(event.joinRoom, { peopleCount });
         done({ peopleCount });
       }
@@ -54,7 +57,10 @@ wsServer.on(event.connection, (socket) => {
   });
 
   socket.on(event.disconnect, () => {
-    const peopleCount = wsServer.sockets.adapter.rooms.get('global')?.size;
+    let peopleCount = 0;
+    if (wsServer.sockets.adapter.rooms.get(roomName)) {
+      peopleCount = wsServer.sockets.adapter.rooms.get(roomName).size;
+    }
     if (peopleCount) socket.to('global').emit(event.joinRoom, { peopleCount });
   });
 });
