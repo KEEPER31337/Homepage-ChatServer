@@ -1,0 +1,25 @@
+{
+  "name": "chat-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KEEPER31337/Homepage-ChatServer.git"
+  },
+  "author": "goo-gy",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KEEPER31337/Homepage-ChatServer/issues"
+  },
+  "homepage": "https://github.com/KEEPER31337/Homepage-ChatServer#readme",
+  "dependencies": {
+    "axios": "^0.26.1",
+    "dayjs": "^1.11.1",
+    "dotenv": "^16.0.0",
+    "socket.io": "^4.4.1"
+  }
+}
