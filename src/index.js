@@ -29,50 +29,66 @@ const io = new Server(httpServer, {
 
 io.on(event.connection, (socket) => {
   socket.on(event.auth, function ({ token }, authDone) {
-    authAPI.getAuth({ token }).then((data) => {
-      if (data.success) {
-        const { id, nickName, thumbnailPath } = { ...data.data };
-        socket['member'] = { id, nickName, thumbnailPath };
-        authDone();
-        connectMember({ memberId: id, socketId: socket.id });
-      }
-    });
+    try {
+      authAPI.getAuth({ token }).then((data) => {
+        if (data.success) {
+          const { id, nickName, thumbnailPath } = { ...data.data };
+          socket['member'] = { id, nickName, thumbnailPath };
+          authDone();
+          connectMember({ memberId: id, socketId: socket.id });
+        }
+      });
+    } catch (error) {
+      console.log(error);
+    }
   });
 
   socket.on(event.joinRoom, ({ roomName }, done) => {
-    const newMember = socket['member'];
-    if (!checkMember({ roomName, member: newMember })) {
-      socket.to(roomName).emit(event.joinRoom, { newMember });
+    try {
+      const newMember = socket['member'];
+      if (!checkMember({ roomName, member: newMember })) {
+        socket.to(roomName).emit(event.joinRoom, { newMember });
+      }
+      socket.join(roomName);
+      joinRoom({ roomName, member: newMember });
+      const activeMembers = getMembers({ roomName });
+      done({ activeMembers });
+    } catch (error) {
+      console.log(error);
     }
-    socket.join(roomName);
-    joinRoom({ roomName, member: newMember });
-    const activeMembers = getMembers({ roomName });
-    done({ activeMembers });
   });
 
   socket.on(event.msg, ({ roomName, msg }, done) => {
-    const time = dayjs().format(timeFormat);
-    const member = socket['member'];
-    if (msg) {
-      socket.to(roomName).emit(event.msg, {
-        member,
-        msg,
-        time,
-      });
-      done(time);
+    try {
+      const time = dayjs().format(timeFormat);
+      const member = socket['member'];
+      if (msg) {
+        socket.to(roomName).emit(event.msg, {
+          member,
+          msg,
+          time,
+        });
+        done(time);
+      }
+    } catch (error) {
+      console.log(error);
     }
   });
 
   socket.on(event.disconnecting, () => {
-    const leaveMember = socket['member'];
-    disconnectMember({ memberId: leaveMember.id, socketId: socket.id });
-    if (getSocketCount(leaveMember.id) === 0) {
-      socket.rooms.forEach((roomName) => {
-        if (io.sockets.adapter.rooms.get(roomName)) {
-          socket.to(roomName).emit(event.leaveRoom, { leaveMember });
-          leaveRoom({ roomName, member: leaveMember });
-        }
-      });
+    try {
+      const leaveMember = socket['member'];
+      disconnectMember({ memberId: leaveMember.id, socketId: socket.id });
+      if (getSocketCount(leaveMember.id) === 0) {
+        socket.rooms.forEach((roomName) => {
+          if (io.sockets.adapter.rooms.get(roomName)) {
+            socket.to(roomName).emit(event.leaveRoom, { leaveMember });
+            leaveRoom({ roomName, member: leaveMember });
+          }
+        });
+      }
+    } catch (error) {
+      console.log(error);
     }
   });
   socket.on(event.disconnect, () => {});
