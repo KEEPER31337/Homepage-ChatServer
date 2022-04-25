@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import authAPI from './API/auth';
 import { joinRoom, leaveRoom, getMembers, checkMember } from './DB/room.js';
 import { connectMember, disconnectMember, getSocketCount } from './DB/member';
+import { saveChatLog, getChatLogs } from './DB/message';
 
 const PORT = 3002;
 const timeFormat = 'YYYY-MM-DD hh:mm:ss';
@@ -52,7 +53,8 @@ io.on(event.connection, (socket) => {
       socket.join(roomName);
       joinRoom({ roomName, member: newMember });
       const activeMembers = getMembers({ roomName });
-      done({ activeMembers });
+      const chatLogs = getChatLogs({ roomName });
+      done({ activeMembers, chatLogs });
     } catch (error) {
       console.log(error);
     }
@@ -62,13 +64,15 @@ io.on(event.connection, (socket) => {
     try {
       const time = dayjs().format(timeFormat);
       const member = socket['member'];
+      if (!member) {
+        console.log('error', member);
+        return;
+      }
       if (msg) {
-        socket.to(roomName).emit(event.msg, {
-          member,
-          msg,
-          time,
-        });
+        const chatLog = { member, msg, time };
+        socket.to(roomName).emit(event.msg, chatLog);
         done(time);
+        saveChatLog({ roomName, chatLog });
       }
     } catch (error) {
       console.log(error);
@@ -78,6 +82,9 @@ io.on(event.connection, (socket) => {
   socket.on(event.disconnecting, () => {
     try {
       const leaveMember = socket['member'];
+      if (!leaveMember) {
+        return;
+      }
       disconnectMember({ memberId: leaveMember.id, socketId: socket.id });
       if (getSocketCount(leaveMember.id) === 0) {
         socket.rooms.forEach((roomName) => {
