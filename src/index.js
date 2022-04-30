@@ -12,12 +12,14 @@ import {
   getActiveMembers,
   checkMember,
 } from './db/query/room.js';
-import { saveChatLog, getChatLogs } from './db/query/chatLog';
+import { saveChatLog, getChatLogList } from './db/query/chatLog';
 import {
   connectMember,
   disconnectMember,
   getSocketCount,
 } from './memory/member';
+
+// TODO : Error Handling
 
 const PORT = 3002;
 const timeFormat = 'YYYY-MM-DD hh:mm:ss';
@@ -41,6 +43,7 @@ const io = new Server(httpServer, {
 });
 
 // TODO : activate 판단은 메모리에서
+// TODO : 서버 재시작시 deactivateAll
 
 io.on(event.connection, (socket) => {
   // deactivateAll();
@@ -58,7 +61,7 @@ io.on(event.connection, (socket) => {
     }
   });
 
-  socket.on(event.joinRoom, async ({ room_id }, done) => {
+  socket.on(event.joinRoom, async ({ room_id, savedId }, done) => {
     try {
       const newMember = socket['member'];
       if (!newMember) {
@@ -71,8 +74,10 @@ io.on(event.connection, (socket) => {
       }
       const result = await joinRoom({ room_id, member_id: newMember.id });
       const activeMemberIdList = await getActiveMembers({ room_id });
-      console.log(activeMemberIdList);
-      const chatLogs = await getChatLogs({ room_id });
+      const [chatLogList, timeSince] = await getChatLogList({
+        room_id,
+        savedId,
+      });
 
       // TODO : get Members
       const activeMembers = activeMemberIdList.map((activeMemberId) => ({
@@ -83,7 +88,7 @@ io.on(event.connection, (socket) => {
         jobs: ['사서'],
         type: '정규회원',
       }));
-      done({ activeMembers, chatLogs });
+      done({ activeMembers, chatLogList, timeSince });
     } catch (error) {
       console.log('[joinRoom]:,', error);
     }
@@ -104,12 +109,14 @@ io.on(event.connection, (socket) => {
           message,
           time,
         };
-        console.log(chatLog);
-        socket.to(room_id).emit(event.message, chatLog);
         saveChatLog({ room_id, chatLog })
           .then((result) => {
-            console.log(result, chatLog);
-            done(chatLog);
+            if (result) {
+              done({ id: result.insertId, ...chatLog });
+              socket
+                .to(room_id)
+                .emit(event.message, { ...chatLog, id: result.insertId });
+            }
           })
           .catch((err) => {
             console.log(err);
@@ -130,7 +137,6 @@ io.on(event.connection, (socket) => {
         member_id: disconnectedMember.id,
         socketId: socket.id,
       });
-      console.log(getSocketCount(disconnectedMember.id));
       if (getSocketCount(disconnectedMember.id) === 0) {
         socket.rooms.forEach((room_id) => {
           if (io.sockets.adapter.rooms.get(room_id)) {
