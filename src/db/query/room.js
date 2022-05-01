@@ -79,10 +79,11 @@ const getMembers = async ({ room_id }) => {
 
 const getActiveMembers = async ({ room_id }) => {
   try {
-    const QUERY_GET_MEMBER = `SELECT member_id FROM room_has_member WHERE room_id='${room_id}' AND active=TRUE`;
+    const QUERY_GET_MEMBER = `SELECT member.id, member.nick_name, member.image_path FROM room_has_member JOIN member ON member_id=member.id AND room_id='${room_id}' AND active=TRUE`;
     const [result, fields] = await poolPromise.query(QUERY_GET_MEMBER);
     return result;
   } catch (err) {
+    console.log(err);
     return [];
   }
 };

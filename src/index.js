@@ -13,6 +13,7 @@ import {
   checkMember,
 } from './db/query/room.js';
 import { saveChatLog, getChatLogList } from './db/query/chatLog';
+import { registerMember } from './db/query/member';
 import {
   connectMember,
   disconnectMember,
@@ -52,7 +53,12 @@ io.on(event.connection, (socket) => {
       const data = await authAPI.getAuth({ token });
       if (data.success) {
         const { id, nickName, thumbnailPath } = { ...data.data };
-        socket['member'] = { id, nickName, thumbnailPath };
+        await registerMember({ id, nickName, thumbnailPath });
+        socket['member'] = {
+          id,
+          nick_name: nickName,
+          image_path: thumbnailPath,
+        };
         await connectMember({ member_id: id, socketId: socket.id });
         authDone();
       }
@@ -73,21 +79,13 @@ io.on(event.connection, (socket) => {
         socket.to(room_id).emit(event.joinRoom, { newMember });
       }
       const result = await joinRoom({ room_id, member_id: newMember.id });
-      const activeMemberIdList = await getActiveMembers({ room_id });
+      const activeMembers = await getActiveMembers({ room_id });
       const [chatLogList, timeSince] = await getChatLogList({
         room_id,
         savedId,
       });
 
       // TODO : get Members
-      const activeMembers = activeMemberIdList.map((activeMemberId) => ({
-        id: activeMemberId.member_id,
-        nickName: '???',
-        thumbnailPath: null,
-        generation: '0',
-        jobs: ['사서'],
-        type: '정규회원',
-      }));
       done({ activeMembers, chatLogList, timeSince });
     } catch (error) {
       console.log('[joinRoom]:,', error);
@@ -104,8 +102,8 @@ io.on(event.connection, (socket) => {
       if (message) {
         const chatLog = {
           member_id: member.id,
-          member_name: member.nickName,
-          member_image: member.thumbnailPath,
+          member_name: member.nick_name,
+          member_image: member.image_path,
           message,
           time,
         };
