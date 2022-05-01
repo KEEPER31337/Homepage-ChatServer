@@ -1,0 +1,37 @@
+{
+  "name": "chat-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon",
+    "db:createDB": "babel-node src/db/create_db.js",
+    "db:migrate": "babel-node src/db/migration.js up",
+    "db:rollback": "babel-node src/db/migration.js down"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KEEPER31337/Homepage-ChatServer.git"
+  },
+  "author": "goo-gy",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KEEPER31337/Homepage-ChatServer/issues"
+  },
+  "homepage": "https://github.com/KEEPER31337/Homepage-ChatServer#readme",
+  "dependencies": {
+    "axios": "^0.26.1",
+    "dayjs": "^1.11.1",
+    "dotenv": "^16.0.0",
+    "mysql": "^2.18.1",
+    "mysql-migrations": "^1.0.7",
+    "mysql2": "^2.3.3",
+    "socket.io": "^4.4.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-node": "^0.0.1-security",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-stage-3": "^6.24.1"
+  }
+}
