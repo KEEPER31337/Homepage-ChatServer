@@ -47,7 +47,6 @@ const io = new Server(httpServer, {
 // TODO : 서버 재시작시 deactivateAll
 
 io.on(event.connection, (socket) => {
-  // deactivateAll();
   socket.on(event.auth, async ({ token }, authDone) => {
     try {
       const data = await authAPI.getAuth({ token });
@@ -146,5 +145,7 @@ io.on(event.connection, (socket) => {
   });
   socket.on(event.disconnect, () => {});
 });
+
+deactivateAll();
 const handleListen = () => console.log(`Listening on ${PORT}`);
 httpServer.listen(PORT, handleListen);
