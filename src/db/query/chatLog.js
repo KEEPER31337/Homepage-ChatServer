@@ -11,7 +11,7 @@ const saveChatLog = async ({ room_id, chatLog }) => {
     const [result, fields] = await poolPromise.query(QUERY_SAVE_CHAT);
     return result;
   } catch (err) {
-    return err;
+    return false;
   }
 };
 
@@ -25,7 +25,7 @@ const getChatLogList = async ({ room_id, savedId }) => {
     const [result, fields] = await poolPromise.query(QUERY_GET_CHAT);
     return [result, timeSince];
   } catch (err) {
-    return err;
+    return [[], null];
   }
 };
 

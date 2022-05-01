@@ -83,7 +83,6 @@ const getActiveMembers = async ({ room_id }) => {
     const [result, fields] = await poolPromise.query(QUERY_GET_MEMBER);
     return result;
   } catch (err) {
-    console.log(err);
     return [];
   }
 };

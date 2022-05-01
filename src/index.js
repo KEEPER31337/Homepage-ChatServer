@@ -63,7 +63,7 @@ io.on(event.connection, (socket) => {
         authDone();
       }
     } catch (error) {
-      console.log(error);
+      console.log('[auth]:,', error);
     }
   });
 
@@ -84,7 +84,6 @@ io.on(event.connection, (socket) => {
         room_id,
         savedId,
       });
-
       // TODO : get Members
       done({ activeMembers, chatLogList, timeSince });
     } catch (error) {
@@ -107,21 +106,17 @@ io.on(event.connection, (socket) => {
           message,
           time,
         };
-        saveChatLog({ room_id, chatLog })
-          .then((result) => {
-            if (result) {
-              done({ id: result.insertId, ...chatLog });
-              socket
-                .to(room_id)
-                .emit(event.message, { ...chatLog, id: result.insertId });
-            }
-          })
-          .catch((err) => {
-            console.log(err);
-          });
+
+        const result = await saveChatLog({ room_id, chatLog });
+        if (result) {
+          done({ id: result.insertId, ...chatLog });
+          socket
+            .to(room_id)
+            .emit(event.message, { ...chatLog, id: result.insertId });
+        }
       }
     } catch (error) {
-      console.log(error);
+      console.log('[message]:,', error);
     }
   });
 
@@ -146,7 +141,7 @@ io.on(event.connection, (socket) => {
         });
       }
     } catch (error) {
-      console.log(error);
+      console.log('[disconnecting]:,', error);
     }
   });
   socket.on(event.disconnect, () => {});
