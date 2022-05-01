@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon"
+    "start": "nodemon",
+    "db:createDB": "babel-node src/db/create_db.js",
+    "db:migrate": "babel-node src/db/migration.js up",
+    "db:rollback": "babel-node src/db/migration.js down"
   },
   "repository": {
     "type": "git",
@@ -20,6 +23,9 @@
     "axios": "^0.26.1",
     "dayjs": "^1.11.1",
     "dotenv": "^16.0.0",
+    "mysql": "^2.18.1",
+    "mysql-migrations": "^1.0.7",
+    "mysql2": "^2.3.3",
     "socket.io": "^4.4.1"
   },
   "devDependencies": {
