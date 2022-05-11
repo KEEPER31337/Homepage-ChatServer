@@ -12,16 +12,10 @@ DB_password=[]
 
 - API SERVER 주소 설정
 
-## DB 구축
-
-```shell
-docker run --name [container name] -p 3306:3306 -e MYSQL_ROOT_PASSWORD=[password] -d mysql:8.0
-```
-
 ### Database 생성
 
 ```shell
-npm run db:createDB
+npm run db:init
 ```
 
 ### Migration 적용
